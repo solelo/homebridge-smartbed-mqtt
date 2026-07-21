@@ -21,5 +21,12 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npm run build
+      - name: Verify committed dist/ matches a fresh build
+        run: |
+          if ! git diff --quiet --exit-code -- dist; then
+            echo "::error::dist/ is out of date with src/ — run 'npm run build' and commit the result. dist/ is committed (not gitignored) so 'npm install' from git installs it pre-built, with no build step or devDependencies required."
+            git diff --stat -- dist
+            exit 1
+          fi
       - run: npm test -- --coverage
       - run: npm audit --audit-level=high
