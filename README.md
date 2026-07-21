@@ -179,14 +179,24 @@ the cached-accessory reattach/prune lifecycle — using hand-rolled HAP/MQTT moc
 runs fully offline with no real broker or Homebridge instance required. CI runs lint,
 build, tests, and `npm audit` on every push/PR.
 
-### Installing this fork directly from GitHub (before an npm release)
+### Installing directly from GitHub (before an npm release)
+
+`npm install -g git+https://...` is unreliable for this: npm's global git-install path
+symlinks the package into its own temporary cache directory rather than a stable
+location, so the link can go dangling as soon as npm cleans that cache up. Clone to a
+real directory and `npm link` it instead — this is the standard way to run an unpublished
+Homebridge plugin, and Homebridge treats the result exactly like a normal install:
 
 ```
-npm install -g git+https://github.com/solelo/homebridge-smartbed-mqtt.git
+git clone https://github.com/solelo/homebridge-smartbed-mqtt.git
+cd homebridge-smartbed-mqtt
+npm install --omit=dev
+npm link
 ```
 
-Homebridge will treat it exactly like an npm-installed plugin. Restart Homebridge after
-installing.
+`dist/` is committed to this repo, so no build step is required. Restart Homebridge
+after linking. To pick up a future update, `git pull` inside that same cloned directory
+and restart Homebridge again — no need to re-run `npm link`.
 
 This plugin is not affiliated with or endorsed by `richardhopton/smartbed-mqtt`; it is an
 independent HomeKit bridge that consumes its standard MQTT discovery output.
