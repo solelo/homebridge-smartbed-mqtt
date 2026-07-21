@@ -1,0 +1,101 @@
+{
+  "pluginAlias": "SmartBedMqtt",
+  "pluginType": "platform",
+  "singular": true,
+  "headerDisplay": "Exposes beds published by the [smartbed-mqtt](https://github.com/richardhopton/smartbed-mqtt) Home Assistant add-on to HomeKit. Point this at the *same* MQTT broker the add-on publishes to \u2014 it works with every bed type the add-on supports (Sleeptracker, ErgoMotion, Linak, Richmat, Keeson, Octo, and the rest) because it reads the standard Home Assistant MQTT discovery messages the add-on already sends, rather than talking to any single bed protocol itself.",
+  "footerDisplay": "After saving, restart Homebridge. New beds/entities usually appear within a few seconds of the smartbed-mqtt add-on (re)publishing its discovery messages.",
+  "schema": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "title": "Platform Name",
+        "type": "string",
+        "default": "Smart Bed MQTT",
+        "required": true
+      },
+      "mqttHost": {
+        "title": "MQTT Broker Host",
+        "type": "string",
+        "placeholder": "192.168.1.10 or mqtt.local",
+        "required": true,
+        "description": "The same broker (e.g. the Mosquitto add-on) that smartbed-mqtt is configured to publish to."
+      },
+      "mqttPort": {
+        "title": "MQTT Broker Port",
+        "type": "integer",
+        "placeholder": "1883 (or 8883 if TLS is enabled)",
+        "minimum": 1,
+        "maximum": 65535
+      },
+      "mqttUsername": {
+        "title": "MQTT Username",
+        "type": "string"
+      },
+      "mqttPassword": {
+        "title": "MQTT Password",
+        "type": "string",
+        "x-schema-form": { "type": "password" }
+      },
+      "mqttUseTls": {
+        "title": "Use TLS (mqtts://)",
+        "type": "boolean",
+        "default": false,
+        "description": "Enable if your broker is configured for TLS. Strongly recommended if the broker is reachable outside your local network."
+      },
+      "mqttCaFile": {
+        "title": "CA Certificate File Path (optional)",
+        "type": "string",
+        "description": "Only needed for a private/self-signed broker certificate.",
+        "condition": { "functionBody": "return model.mqttUseTls === true;" }
+      },
+      "mqttCertFile": {
+        "title": "Client Certificate File Path (optional)",
+        "type": "string",
+        "description": "Only needed if your broker requires mutual TLS.",
+        "condition": { "functionBody": "return model.mqttUseTls === true;" }
+      },
+      "mqttKeyFile": {
+        "title": "Client Private Key File Path (optional)",
+        "type": "string",
+        "condition": { "functionBody": "return model.mqttUseTls === true;" }
+      },
+      "mqttAllowInsecureTls": {
+        "title": "Allow Insecure TLS (skip certificate validation)",
+        "type": "boolean",
+        "default": false,
+        "description": "\u26a0\ufe0f Only enable this temporarily against a broker you control. Disabling certificate validation allows traffic to be intercepted or tampered with.",
+        "condition": { "functionBody": "return model.mqttUseTls === true;" }
+      },
+      "discoveryPrefix": {
+        "title": "MQTT Discovery Prefix",
+        "type": "string",
+        "default": "homeassistant",
+        "description": "Must match the Home Assistant MQTT discovery prefix smartbed-mqtt is using. Leave as default unless you changed it."
+      },
+      "includeDevices": {
+        "title": "Only Include Beds Matching (optional)",
+        "type": "array",
+        "items": { "type": "string" },
+        "description": "Case-insensitive substrings of bed names to include. Leave empty to include every bed smartbed-mqtt publishes."
+      },
+      "excludeDevices": {
+        "title": "Exclude Beds Matching (optional)",
+        "type": "array",
+        "items": { "type": "string" },
+        "description": "Case-insensitive substrings of bed names to hide from HomeKit."
+      }
+    }
+  },
+  "layout": [
+    {
+      "type": "fieldset",
+      "title": "MQTT Broker",
+      "items": ["mqttHost", "mqttPort", "mqttUsername", "mqttPassword", "mqttUseTls", "mqttAllowInsecureTls", "mqttCaFile", "mqttCertFile", "mqttKeyFile"]
+    },
+    {
+      "type": "fieldset",
+      "title": "Discovery",
+      "items": ["discoveryPrefix", "includeDevices", "excludeDevices"]
+    }
+  ]
+}
