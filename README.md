@@ -183,20 +183,24 @@ build, tests, and `npm audit` on every push/PR.
 
 `npm install -g git+https://...` is unreliable for this: npm's global git-install path
 symlinks the package into its own temporary cache directory rather than a stable
-location, so the link can go dangling as soon as npm cleans that cache up. Clone to a
-real directory and `npm link` it instead — this is the standard way to run an unpublished
-Homebridge plugin, and Homebridge treats the result exactly like a normal install:
+location, so the link can go dangling as soon as npm cleans that cache up. `npm link`
+avoids that specific problem but introduces another: Homebridge's own plugin scanner
+does not follow symlinks when looking for installed plugins, so a `npm link`-installed
+plugin can sit there working perfectly well as far as npm is concerned while Homebridge
+never even notices it exists.
+
+Clone to a real directory and install it as an actual copy (`--install-links`, not a
+symlink):
 
 ```
 git clone https://github.com/solelo/homebridge-smartbed-mqtt.git
 cd homebridge-smartbed-mqtt
-npm install --omit=dev
-npm link
+npm install -g --install-links .
 ```
 
 `dist/` is committed to this repo, so no build step is required. Restart Homebridge
-after linking. To pick up a future update, `git pull` inside that same cloned directory
-and restart Homebridge again — no need to re-run `npm link`.
+after installing. To pick up a future update: `git pull` inside that cloned directory,
+then re-run `npm install -g --install-links .` and restart Homebridge again.
 
 This plugin is not affiliated with or endorsed by `richardhopton/smartbed-mqtt`; it is an
 independent HomeKit bridge that consumes its standard MQTT discovery output.
