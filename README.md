@@ -38,7 +38,7 @@ That means:
 ## Installation
 
 ```
-sudo npm install -g homebridge-smartbed-mqtt
+npm install -g homebridge-smartbed-mqtt
 ```
 
 Or search for **"Smart Bed MQTT"** in Homebridge Config UI X and click Install.
@@ -182,7 +182,7 @@ build, tests, and `npm audit` on every push/PR.
 ### Installing this fork directly from GitHub (before an npm release)
 
 ```
-sudo npm install -g git+https://github.com/solelo/homebridge-smartbed-mqtt.git
+npm install -g git+https://github.com/solelo/homebridge-smartbed-mqtt.git
 ```
 
 Homebridge will treat it exactly like an npm-installed plugin. Restart Homebridge after
