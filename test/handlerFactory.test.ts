@@ -34,6 +34,20 @@ describe('createHandler', () => {
     expect(createHandler(entity, ctx)).toBeInstanceOf(SensorHandler);
   });
 
+  it('hides a supported sensor when its device_class is in hiddenSensorClasses', () => {
+    const ctx = makeContext();
+    ctx.hiddenSensorClasses = new Set(['temperature']);
+    const entity = makeEntity('sensor', 'temp', { device_class: 'temperature' });
+    expect(createHandler(entity, ctx)).toBeUndefined();
+  });
+
+  it('does not hide a supported sensor whose device_class is not in hiddenSensorClasses', () => {
+    const ctx = makeContext();
+    ctx.hiddenSensorClasses = new Set(['humidity']);
+    const entity = makeEntity('sensor', 'temp', { device_class: 'temperature' });
+    expect(createHandler(entity, ctx)).toBeInstanceOf(SensorHandler);
+  });
+
   it('returns undefined and logs for a sensor with an unsupported device_class', () => {
     const ctx = makeContext();
     const entity = makeEntity('sensor', 'voc', { device_class: 'voc' });

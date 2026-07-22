@@ -38,6 +38,12 @@ export function createHandler(entity: DiscoveredEntity, ctx: HandlerContext): En
         );
         return undefined;
       }
+      if (ctx.hiddenSensorClasses?.has(entity.config.device_class!)) {
+        ctx.log.debug(
+          `[${entity.deviceName}] Sensor "${entity.objectId}" (device_class: ${entity.config.device_class}) is hidden by config.`,
+        );
+        return undefined;
+      }
       return new SensorHandler(entity, ctx);
     case 'fan':
       ctx.log.warn(

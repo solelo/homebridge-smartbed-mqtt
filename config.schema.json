@@ -115,6 +115,21 @@
           }
         },
         "description": "Some smartbed-mqtt integrations publish technical/internal names (e.g. a BLE chip's advertised name) instead of something meaningful. Add a rule here to rename any control whose raw name contains a given substring — check Homebridge's debug log (-D) to see the raw names smartbed-mqtt is publishing for your bed. The first matching rule wins; anything that doesn't match keeps its original name."
+      },
+      "hideTemperatureSensor": {
+        "title": "Hide Temperature Sensor",
+        "type": "boolean",
+        "default": false
+      },
+      "hideHumiditySensor": {
+        "title": "Hide Humidity Sensor",
+        "type": "boolean",
+        "default": false
+      },
+      "hideCo2Sensor": {
+        "title": "Hide CO₂ Sensor",
+        "type": "boolean",
+        "default": false
       }
     }
   },
@@ -133,6 +148,11 @@
       "type": "fieldset",
       "title": "Controls",
       "items": ["includeEntities", "excludeEntities", "entityNameOverrides"]
+    },
+    {
+      "type": "fieldset",
+      "title": "Sensors",
+      "items": ["hideTemperatureSensor", "hideHumiditySensor", "hideCo2Sensor"]
     }
   ]
 }

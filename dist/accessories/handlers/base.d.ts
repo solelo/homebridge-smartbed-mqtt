@@ -9,6 +9,8 @@ export interface HandlerContext {
     mqtt: MqttManager;
     accessory: PlatformAccessory;
     nameOverrides?: NameOverrideRule[];
+    /** Sensor `device_class` values (e.g. "temperature") to skip exposing entirely. */
+    hiddenSensorClasses?: Set<string>;
 }
 /**
  * Common behaviour shared by every entity -> HomeKit service adapter:

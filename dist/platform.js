@@ -56,7 +56,7 @@ class SmartBedMqttPlatform {
             this.api.unregisterPlatformAccessories(settings_1.PLUGIN_NAME, settings_1.PLATFORM_NAME, accessories);
         }, (accessory) => {
             this.claimedUuids.add(accessory.UUID);
-        }, (0, nameOverrides_1.sanitizeNameOverrides)(this.config.entityNameOverrides));
+        }, (0, nameOverrides_1.sanitizeNameOverrides)(this.config.entityNameOverrides), this.buildHiddenSensorClasses());
         // Accessories that came from the Homebridge cache get "claimed" the moment their
         // owning device settles for the first time (see BedAccessoryManager.onDeviceSettled,
         // which re-uses cached accessories rather than creating new ones). Anything still
@@ -65,6 +65,19 @@ class SmartBedMqttPlatform {
         setTimeout(() => this.pruneStaleAccessories(), STALE_ACCESSORY_PRUNE_MS);
         this.mqttManager.connect();
         this.discoveryManager.start();
+    }
+    buildHiddenSensorClasses() {
+        const hidden = new Set();
+        if (this.config.hideTemperatureSensor) {
+            hidden.add('temperature');
+        }
+        if (this.config.hideHumiditySensor) {
+            hidden.add('humidity');
+        }
+        if (this.config.hideCo2Sensor) {
+            hidden.add('carbon_dioxide');
+        }
+        return hidden;
     }
     pruneStaleAccessories() {
         const stale = [];

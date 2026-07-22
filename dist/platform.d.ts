@@ -18,6 +18,9 @@ export interface SmartBedPlatformConfig extends PlatformConfig {
         match: string;
         name: string;
     }>;
+    hideTemperatureSensor?: boolean;
+    hideHumiditySensor?: boolean;
+    hideCo2Sensor?: boolean;
 }
 export declare class SmartBedMqttPlatform implements DynamicPlatformPlugin {
     private readonly log;
@@ -31,5 +34,6 @@ export declare class SmartBedMqttPlatform implements DynamicPlatformPlugin {
     /** Required by DynamicPlatformPlugin: Homebridge hands us every accessory it had cached. */
     configureAccessory(accessory: PlatformAccessory): void;
     private start;
+    private buildHiddenSensorClasses;
     private pruneStaleAccessories;
 }

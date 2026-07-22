@@ -36,6 +36,10 @@ function createHandler(entity, ctx) {
                     'HomeKit equivalent and will not be exposed. Supported: temperature, humidity, carbon_dioxide.');
                 return undefined;
             }
+            if (ctx.hiddenSensorClasses?.has(entity.config.device_class)) {
+                ctx.log.debug(`[${entity.deviceName}] Sensor "${entity.objectId}" (device_class: ${entity.config.device_class}) is hidden by config.`);
+                return undefined;
+            }
             return new sensorHandler_1.SensorHandler(entity, ctx);
         case 'fan':
             ctx.log.warn(`[${entity.deviceName}] Entity "${entity.objectId}" uses the "fan" component, which smartbed-mqtt does not currently ` +

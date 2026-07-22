@@ -79,6 +79,7 @@ Manual `config.json` example:
 | `includeDevices` / `excludeDevices` | No | Arrays of case-insensitive substrings to filter which beds are exposed. |
 | `includeEntities` / `excludeEntities` | No | Arrays of case-insensitive substrings to filter which *individual controls* are exposed (unlike `includeDevices`/`excludeDevices`, which hide a whole bed). |
 | `entityNameOverrides` | No | Array of `{ "match": "...", "name": "..." }` rules to rename controls (see below). |
+| `hideTemperatureSensor` / `hideHumiditySensor` / `hideCo2Sensor` | No | Booleans — hide that specific native sensor type without touching anything else on the bed. |
 
 Restart Homebridge after saving. Beds typically appear in HomeKit within a few seconds,
 once smartbed-mqtt (re)publishes its retained discovery messages.
@@ -129,6 +130,25 @@ That hides every control whose raw name contains "snore relief" (e.g. both a "Sn
 Relief Vibration" and a "Snore Relief Tilt" control) without touching anything else on the
 bed. Excluded controls are skipped entirely — no MQTT subscription, no HomeKit service —
 rather than just hidden client-side.
+
+### Hiding a sensor type
+
+For the three native sensor types this plugin exposes (temperature/humidity/CO₂), there's
+a dedicated toggle for each — available directly in Homebridge Config UI X's plugin
+settings form, no JSON editing required:
+
+```json
+{
+  "platform": "SmartBedMqtt",
+  "name": "Smart Bed MQTT",
+  "mqttHost": "192.168.1.10",
+  "hideTemperatureSensor": true,
+  "hideCo2Sensor": true
+}
+```
+
+This hides *every* sensor of that type across every bed (matched by `device_class`, not
+name) — for hiding one specific sensor entity by name instead, use `excludeEntities`.
 
 ## What shows up in HomeKit
 

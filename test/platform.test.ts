@@ -14,7 +14,7 @@ const connectMock = jest.fn(() => {
 jest.mock('mqtt', () => ({ connect: () => connectMock() }));
 
 import { SmartBedMqttPlatform, SmartBedPlatformConfig } from '../src/platform';
-import { makeFakeApi, makeFakeLogger } from './mocks/hap';
+import { makeFakeApi, makeFakeLogger, Service } from './mocks/hap';
 
 // Mirrors platform.ts's private STALE_ACCESSORY_PRUNE_MS constant.
 const STALE_ACCESSORY_PRUNE_MS = 45_000;
@@ -128,6 +128,41 @@ describe('SmartBedMqttPlatform', () => {
     const accessory = api.registerPlatformAccessories.mock.calls[0][2][0];
     expect(accessory.services.some((s: any) => s.displayName === 'Snore Relief Vibration')).toBe(false);
     expect(accessory.services.some((s: any) => s.displayName === 'Head Motor')).toBe(true);
+    jest.useRealTimers();
+  });
+
+  it('hideTemperatureSensor/hideHumiditySensor/hideCo2Sensor omit only the matching sensor types', () => {
+    jest.useFakeTimers();
+    const { api } = setup({
+      platform: 'SmartBedMqtt',
+      name: 'test',
+      mqttHost: 'broker.local',
+      hideTemperatureSensor: true,
+      hideCo2Sensor: true,
+    });
+    api.emit('didFinishLaunching');
+    lastClient.emit(
+      'message',
+      'homeassistant/sensor/bed1/temp/config',
+      Buffer.from(JSON.stringify({ device_class: 'temperature', device: { identifiers: 'bed1', name: 'My Bed' } })),
+    );
+    lastClient.emit(
+      'message',
+      'homeassistant/sensor/bed1/humidity/config',
+      Buffer.from(JSON.stringify({ device_class: 'humidity', device: { identifiers: 'bed1', name: 'My Bed' } })),
+    );
+    lastClient.emit(
+      'message',
+      'homeassistant/sensor/bed1/co2/config',
+      Buffer.from(JSON.stringify({ device_class: 'carbon_dioxide', device: { identifiers: 'bed1', name: 'My Bed' } })),
+    );
+    jest.advanceTimersByTime(DISCOVERY_SETTLE_MS);
+
+    const accessory = api.registerPlatformAccessories.mock.calls[0][2][0];
+    const serviceUuids = accessory.services.map((s: any) => s.UUID);
+    expect(serviceUuids).not.toContain(Service.TemperatureSensor.UUID);
+    expect(serviceUuids).not.toContain(Service.CarbonDioxideSensor.UUID);
+    expect(serviceUuids).toContain(Service.HumiditySensor.UUID);
     jest.useRealTimers();
   });
 

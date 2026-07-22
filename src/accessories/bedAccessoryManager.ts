@@ -35,6 +35,7 @@ export class BedAccessoryManager {
     private readonly unregisterAccessories: (accessories: PlatformAccessory[]) => void,
     private readonly claimAccessory: (accessory: PlatformAccessory) => void,
     private readonly nameOverrides: NameOverrideRule[] = [],
+    private readonly hiddenSensorClasses: Set<string> = new Set(),
   ) {
     this.mqtt.onMessage((topic, payload) => this.routeMessage(topic, payload));
     this.discovery.on('deviceSettled', (device: DeviceEntities) => this.onDeviceSettled(device));
@@ -106,6 +107,7 @@ export class BedAccessoryManager {
       mqtt: this.mqtt,
       accessory: state.accessory,
       nameOverrides: this.nameOverrides,
+      hiddenSensorClasses: this.hiddenSensorClasses,
     };
     const handler = createHandler(entity, ctx);
     if (!handler) {

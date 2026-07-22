@@ -22,6 +22,9 @@ export interface SmartBedPlatformConfig extends PlatformConfig {
   includeEntities?: string[];
   excludeEntities?: string[];
   entityNameOverrides?: Array<{ match: string; name: string }>;
+  hideTemperatureSensor?: boolean;
+  hideHumiditySensor?: boolean;
+  hideCo2Sensor?: boolean;
 }
 
 /** How long we wait after startup before pruning cached accessories nothing re-claimed. */
@@ -105,6 +108,7 @@ export class SmartBedMqttPlatform implements DynamicPlatformPlugin {
         this.claimedUuids.add(accessory.UUID);
       },
       sanitizeNameOverrides(this.config.entityNameOverrides),
+      this.buildHiddenSensorClasses(),
     );
 
     // Accessories that came from the Homebridge cache get "claimed" the moment their
@@ -116,6 +120,20 @@ export class SmartBedMqttPlatform implements DynamicPlatformPlugin {
 
     this.mqttManager.connect();
     this.discoveryManager.start();
+  }
+
+  private buildHiddenSensorClasses(): Set<string> {
+    const hidden = new Set<string>();
+    if (this.config.hideTemperatureSensor) {
+      hidden.add('temperature');
+    }
+    if (this.config.hideHumiditySensor) {
+      hidden.add('humidity');
+    }
+    if (this.config.hideCo2Sensor) {
+      hidden.add('carbon_dioxide');
+    }
+    return hidden;
   }
 
   private pruneStaleAccessories(): void {

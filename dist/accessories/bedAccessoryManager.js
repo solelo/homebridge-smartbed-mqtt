@@ -9,7 +9,7 @@ const settings_1 = require("../settings");
  * entities come and go, and fanning out incoming MQTT messages to the right handler(s).
  */
 class BedAccessoryManager {
-    constructor(api, log, mqtt, discovery, cachedAccessories, registerAccessories, unregisterAccessories, claimAccessory, nameOverrides = []) {
+    constructor(api, log, mqtt, discovery, cachedAccessories, registerAccessories, unregisterAccessories, claimAccessory, nameOverrides = [], hiddenSensorClasses = new Set()) {
         this.api = api;
         this.log = log;
         this.mqtt = mqtt;
@@ -19,6 +19,7 @@ class BedAccessoryManager {
         this.unregisterAccessories = unregisterAccessories;
         this.claimAccessory = claimAccessory;
         this.nameOverrides = nameOverrides;
+        this.hiddenSensorClasses = hiddenSensorClasses;
         this.devices = new Map();
         /** topic -> handlers listening on it, across every device (state/position/etc.) */
         this.stateTopicIndex = new Map();
@@ -84,6 +85,7 @@ class BedAccessoryManager {
             mqtt: this.mqtt,
             accessory: state.accessory,
             nameOverrides: this.nameOverrides,
+            hiddenSensorClasses: this.hiddenSensorClasses,
         };
         const handler = (0, handlerFactory_1.createHandler)(entity, ctx);
         if (!handler) {

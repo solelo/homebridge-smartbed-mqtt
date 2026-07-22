@@ -17,13 +17,14 @@ export declare class BedAccessoryManager {
     private readonly unregisterAccessories;
     private readonly claimAccessory;
     private readonly nameOverrides;
+    private readonly hiddenSensorClasses;
     private readonly devices;
     /** topic -> handlers listening on it, across every device (state/position/etc.) */
     private readonly stateTopicIndex;
     /** topic -> entities whose availability is reported on it */
     private readonly availabilityTopicIndex;
     private readonly lastSeenOnline;
-    constructor(api: API, log: Logger, mqtt: MqttManager, discovery: DiscoveryManager, cachedAccessories: Map<string, PlatformAccessory>, registerAccessories: (accessories: PlatformAccessory[]) => void, unregisterAccessories: (accessories: PlatformAccessory[]) => void, claimAccessory: (accessory: PlatformAccessory) => void, nameOverrides?: NameOverrideRule[]);
+    constructor(api: API, log: Logger, mqtt: MqttManager, discovery: DiscoveryManager, cachedAccessories: Map<string, PlatformAccessory>, registerAccessories: (accessories: PlatformAccessory[]) => void, unregisterAccessories: (accessories: PlatformAccessory[]) => void, claimAccessory: (accessory: PlatformAccessory) => void, nameOverrides?: NameOverrideRule[], hiddenSensorClasses?: Set<string>);
     private uuidFor;
     private onDeviceSettled;
     private attachEntity;
