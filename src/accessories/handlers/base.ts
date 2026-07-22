@@ -2,12 +2,14 @@ import type { API, Logger, PlatformAccessory, Service } from 'homebridge';
 import { MqttManager } from '../../mqtt/mqttManager';
 import { DiscoveredEntity } from '../../discovery/types';
 import { parseTemplate, resolveTemplate, TemplateValue } from '../../discovery/templateResolver';
+import { applyNameOverrides, NameOverrideRule } from '../nameOverrides';
 
 export interface HandlerContext {
   api: API;
   log: Logger;
   mqtt: MqttManager;
   accessory: PlatformAccessory;
+  nameOverrides?: NameOverrideRule[];
 }
 
 /**
@@ -81,6 +83,7 @@ export abstract class EntityHandler {
 
   /** Human-friendly name for the HAP service (falls back sensibly). */
   protected friendlyName(): string {
-    return this.entity.config.name || this.entity.objectId;
+    const raw = this.entity.config.name || this.entity.objectId;
+    return applyNameOverrides(raw, this.ctx.nameOverrides);
   }
 }

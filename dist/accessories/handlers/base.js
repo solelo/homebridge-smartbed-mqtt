@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.EntityHandler = void 0;
 const templateResolver_1 = require("../../discovery/templateResolver");
+const nameOverrides_1 = require("../nameOverrides");
 /**
  * Common behaviour shared by every entity -> HomeKit service adapter:
  *  - attaches/reuses a HAP Service on the accessory
@@ -49,7 +50,8 @@ class EntityHandler {
     }
     /** Human-friendly name for the HAP service (falls back sensibly). */
     friendlyName() {
-        return this.entity.config.name || this.entity.objectId;
+        const raw = this.entity.config.name || this.entity.objectId;
+        return (0, nameOverrides_1.applyNameOverrides)(raw, this.ctx.nameOverrides);
     }
 }
 exports.EntityHandler = EntityHandler;

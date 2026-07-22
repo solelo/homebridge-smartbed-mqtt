@@ -2,6 +2,7 @@ import type { API, DynamicPlatformPlugin, Logger, PlatformAccessory, PlatformCon
 import { MqttManager } from './mqtt/mqttManager';
 import { DiscoveryManager } from './discovery/discoveryManager';
 import { BedAccessoryManager } from './accessories/bedAccessoryManager';
+import { sanitizeNameOverrides } from './accessories/nameOverrides';
 import { DEFAULT_DISCOVERY_PREFIX, PLATFORM_NAME, PLUGIN_NAME } from './settings';
 
 export interface SmartBedPlatformConfig extends PlatformConfig {
@@ -17,6 +18,7 @@ export interface SmartBedPlatformConfig extends PlatformConfig {
   discoveryPrefix?: string;
   includeDevices?: string[];
   excludeDevices?: string[];
+  entityNameOverrides?: Array<{ match: string; name: string }>;
 }
 
 /** How long we wait after startup before pruning cached accessories nothing re-claimed. */
@@ -97,6 +99,7 @@ export class SmartBedMqttPlatform implements DynamicPlatformPlugin {
       (accessory) => {
         this.claimedUuids.add(accessory.UUID);
       },
+      sanitizeNameOverrides(this.config.entityNameOverrides),
     );
 
     // Accessories that came from the Homebridge cache get "claimed" the moment their

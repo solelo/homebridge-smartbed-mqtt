@@ -4,6 +4,7 @@ exports.SmartBedMqttPlatform = void 0;
 const mqttManager_1 = require("./mqtt/mqttManager");
 const discoveryManager_1 = require("./discovery/discoveryManager");
 const bedAccessoryManager_1 = require("./accessories/bedAccessoryManager");
+const nameOverrides_1 = require("./accessories/nameOverrides");
 const settings_1 = require("./settings");
 /** How long we wait after startup before pruning cached accessories nothing re-claimed. */
 const STALE_ACCESSORY_PRUNE_MS = 45_000;
@@ -53,7 +54,7 @@ class SmartBedMqttPlatform {
             this.api.unregisterPlatformAccessories(settings_1.PLUGIN_NAME, settings_1.PLATFORM_NAME, accessories);
         }, (accessory) => {
             this.claimedUuids.add(accessory.UUID);
-        });
+        }, (0, nameOverrides_1.sanitizeNameOverrides)(this.config.entityNameOverrides));
         // Accessories that came from the Homebridge cache get "claimed" the moment their
         // owning device settles for the first time (see BedAccessoryManager.onDeviceSettled,
         // which re-uses cached accessories rather than creating new ones). Anything still

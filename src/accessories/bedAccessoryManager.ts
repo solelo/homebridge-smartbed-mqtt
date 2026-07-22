@@ -4,6 +4,7 @@ import { DiscoveryManager, DeviceEntities } from '../discovery/discoveryManager'
 import { DiscoveredEntity } from '../discovery/types';
 import { EntityHandler } from './handlers/base';
 import { createHandler } from './handlerFactory';
+import { NameOverrideRule } from './nameOverrides';
 import { AVAILABILITY_STALE_MS } from '../settings';
 
 interface DeviceState {
@@ -33,6 +34,7 @@ export class BedAccessoryManager {
     private readonly registerAccessories: (accessories: PlatformAccessory[]) => void,
     private readonly unregisterAccessories: (accessories: PlatformAccessory[]) => void,
     private readonly claimAccessory: (accessory: PlatformAccessory) => void,
+    private readonly nameOverrides: NameOverrideRule[] = [],
   ) {
     this.mqtt.onMessage((topic, payload) => this.routeMessage(topic, payload));
     this.discovery.on('deviceSettled', (device: DeviceEntities) => this.onDeviceSettled(device));
@@ -98,7 +100,13 @@ export class BedAccessoryManager {
       return;
     }
 
-    const ctx = { api: this.api, log: this.log, mqtt: this.mqtt, accessory: state.accessory };
+    const ctx = {
+      api: this.api,
+      log: this.log,
+      mqtt: this.mqtt,
+      accessory: state.accessory,
+      nameOverrides: this.nameOverrides,
+    };
     const handler = createHandler(entity, ctx);
     if (!handler) {
       return;

@@ -2,11 +2,13 @@ import type { API, Logger, PlatformAccessory, Service } from 'homebridge';
 import { MqttManager } from '../../mqtt/mqttManager';
 import { DiscoveredEntity } from '../../discovery/types';
 import { TemplateValue } from '../../discovery/templateResolver';
+import { NameOverrideRule } from '../nameOverrides';
 export interface HandlerContext {
     api: API;
     log: Logger;
     mqtt: MqttManager;
     accessory: PlatformAccessory;
+    nameOverrides?: NameOverrideRule[];
 }
 /**
  * Common behaviour shared by every entity -> HomeKit service adapter:

@@ -1,6 +1,7 @@
 import type { API, Logger, PlatformAccessory } from 'homebridge';
 import { MqttManager } from '../mqtt/mqttManager';
 import { DiscoveryManager } from '../discovery/discoveryManager';
+import { NameOverrideRule } from './nameOverrides';
 /**
  * Owns the mapping between smartbed-mqtt "devices" (one per physical/virtual bed) and
  * Homebridge PlatformAccessories: creating them, attaching/removing HAP services as
@@ -15,13 +16,14 @@ export declare class BedAccessoryManager {
     private readonly registerAccessories;
     private readonly unregisterAccessories;
     private readonly claimAccessory;
+    private readonly nameOverrides;
     private readonly devices;
     /** topic -> handlers listening on it, across every device (state/position/etc.) */
     private readonly stateTopicIndex;
     /** topic -> entities whose availability is reported on it */
     private readonly availabilityTopicIndex;
     private readonly lastSeenOnline;
-    constructor(api: API, log: Logger, mqtt: MqttManager, discovery: DiscoveryManager, cachedAccessories: Map<string, PlatformAccessory>, registerAccessories: (accessories: PlatformAccessory[]) => void, unregisterAccessories: (accessories: PlatformAccessory[]) => void, claimAccessory: (accessory: PlatformAccessory) => void);
+    constructor(api: API, log: Logger, mqtt: MqttManager, discovery: DiscoveryManager, cachedAccessories: Map<string, PlatformAccessory>, registerAccessories: (accessories: PlatformAccessory[]) => void, unregisterAccessories: (accessories: PlatformAccessory[]) => void, claimAccessory: (accessory: PlatformAccessory) => void, nameOverrides?: NameOverrideRule[]);
     private uuidFor;
     private onDeviceSettled;
     private attachEntity;

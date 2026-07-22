@@ -77,9 +77,36 @@ Manual `config.json` example:
 | `mqttAllowInsecureTls` | No | Skips certificate validation. Avoid outside of temporary testing on a broker you control. |
 | `discoveryPrefix` | No | Defaults to `homeassistant`. Only change if you changed it in smartbed-mqtt/HA. |
 | `includeDevices` / `excludeDevices` | No | Arrays of case-insensitive substrings to filter which beds are exposed. |
+| `entityNameOverrides` | No | Array of `{ "match": "...", "name": "..." }` rules to rename controls (see below). |
 
 Restart Homebridge after saving. Beds typically appear in HomeKit within a few seconds,
 once smartbed-mqtt (re)publishes its retained discovery messages.
+
+### Renaming controls
+
+Different smartbed-mqtt bed integrations name their entities very differently. Some
+publish readable names; others (particularly generic/BLE-based integrations) pass through
+raw, technical names — a BLE chip's advertised device name, an internal characteristic
+label, and similar — that don't mean anything in the Home app. Rather than special-case
+every bed brand/integration smartbed-mqtt supports, `entityNameOverrides` lets you rename
+any control yourself:
+
+```json
+{
+  "platform": "SmartBedMqtt",
+  "name": "Smart Bed MQTT",
+  "mqttHost": "192.168.1.10",
+  "entityNameOverrides": [
+    { "match": "adruno", "name": "Bed Controller" },
+    { "match": "connectivity", "name": "Bed Connection" }
+  ]
+}
+```
+
+`match` is a case-insensitive substring checked against each control's raw name (falling
+back to its object ID) as published by smartbed-mqtt — turn on Homebridge's debug logging
+(`-D`) to see the raw names/IDs it's discovering for your bed. The first matching rule
+wins; anything that doesn't match keeps its original name.
 
 ## What shows up in HomeKit
 

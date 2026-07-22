@@ -34,6 +34,13 @@ describe('EntityHandler base behavior', () => {
     expect((unnamed as any).friendlyName()).toBe('obj2');
   });
 
+  it('friendlyName() applies a matching nameOverrides rule from the platform config', () => {
+    const ctx = makeContext();
+    ctx.nameOverrides = [{ match: 'adruno', name: 'Bed Controller' }];
+    const handler = new TestHandler(makeEntity('switch', 'obj1', { name: 'Adruno Sensor 1' }), ctx);
+    expect((handler as any).friendlyName()).toBe('Bed Controller');
+  });
+
   it('resolveValue logs a warning and returns undefined for an unsupported template', () => {
     const ctx = makeContext();
     const handler = new TestHandler(makeEntity('switch', 'obj1', {}), ctx);

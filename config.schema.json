@@ -83,6 +83,26 @@
         "type": "array",
         "items": { "type": "string" },
         "description": "Case-insensitive substrings of bed names to hide from HomeKit."
+      },
+      "entityNameOverrides": {
+        "title": "Rename Controls (optional)",
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "match": {
+              "title": "Match",
+              "type": "string",
+              "description": "Case-insensitive substring to match against the control's raw name, as published by smartbed-mqtt."
+            },
+            "name": {
+              "title": "Display As",
+              "type": "string",
+              "description": "What to show in the Home app instead."
+            }
+          }
+        },
+        "description": "Some smartbed-mqtt integrations publish technical/internal names (e.g. a BLE chip's advertised name) instead of something meaningful. Add a rule here to rename any control whose raw name contains a given substring — check Homebridge's debug log (-D) to see the raw names smartbed-mqtt is publishing for your bed. The first matching rule wins; anything that doesn't match keeps its original name."
       }
     }
   },
@@ -96,6 +116,11 @@
       "type": "fieldset",
       "title": "Discovery",
       "items": ["discoveryPrefix", "includeDevices", "excludeDevices"]
+    },
+    {
+      "type": "fieldset",
+      "title": "Naming",
+      "items": ["entityNameOverrides"]
     }
   ]
 }

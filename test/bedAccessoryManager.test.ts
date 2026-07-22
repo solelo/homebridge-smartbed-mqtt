@@ -7,7 +7,7 @@ import { makeEntity } from './mocks/entity';
 
 class FakeDiscoveryManager extends EventEmitter {}
 
-function setup() {
+function setup(nameOverrides: Array<{ match: string; name: string }> = []) {
   const api = makeFakeApi();
   const log = makeFakeLogger();
   const mqtt = new FakeMqttManager();
@@ -29,6 +29,7 @@ function setup() {
     registerAccessories,
     unregisterAccessories,
     claimAccessory,
+    nameOverrides,
   );
 
   return {
@@ -119,6 +120,15 @@ describe('BedAccessoryManager', () => {
 
     const service = accessory.getServiceById(Service.Switch, 'light');
     expect(service.getCharacteristic(Characteristic.On).value).toBe(true);
+  });
+
+  it('applies a configured nameOverrides rule to a control published with a technical/raw name', () => {
+    const { discovery, registerAccessories } = setup([{ match: 'light', name: 'Bed Controller' }]);
+    discovery.emit('deviceSettled', device());
+    const accessory = registerAccessories.mock.calls[0][0][0];
+
+    const service = accessory.getServiceById(Service.Switch, 'light');
+    expect(service.getCharacteristic(Characteristic.Name).value).toBe('Bed Controller');
   });
 
   it('detaches entities that disappear from a later settle batch for the same device', () => {

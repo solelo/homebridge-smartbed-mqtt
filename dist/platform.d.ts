@@ -12,6 +12,10 @@ export interface SmartBedPlatformConfig extends PlatformConfig {
     discoveryPrefix?: string;
     includeDevices?: string[];
     excludeDevices?: string[];
+    entityNameOverrides?: Array<{
+        match: string;
+        name: string;
+    }>;
 }
 export declare class SmartBedMqttPlatform implements DynamicPlatformPlugin {
     private readonly log;
