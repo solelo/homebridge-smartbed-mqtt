@@ -77,6 +77,7 @@ Manual `config.json` example:
 | `mqttAllowInsecureTls` | No | Skips certificate validation. Avoid outside of temporary testing on a broker you control. |
 | `discoveryPrefix` | No | Defaults to `homeassistant`. Only change if you changed it in smartbed-mqtt/HA. |
 | `includeDevices` / `excludeDevices` | No | Arrays of case-insensitive substrings to filter which beds are exposed. |
+| `includeEntities` / `excludeEntities` | No | Arrays of case-insensitive substrings to filter which *individual controls* are exposed (unlike `includeDevices`/`excludeDevices`, which hide a whole bed). |
 | `entityNameOverrides` | No | Array of `{ "match": "...", "name": "..." }` rules to rename controls (see below). |
 
 Restart Homebridge after saving. Beds typically appear in HomeKit within a few seconds,
@@ -107,6 +108,27 @@ any control yourself:
 back to its object ID) as published by smartbed-mqtt — turn on Homebridge's debug logging
 (`-D`) to see the raw names/IDs it's discovering for your bed. The first matching rule
 wins; anything that doesn't match keeps its original name.
+
+### Hiding individual controls
+
+`includeDevices`/`excludeDevices` hide an entire bed. To hide just *one control* (e.g. a
+snore-relief vibration/tilt control you don't want in HomeKit) while keeping the rest of
+that same bed, use `includeEntities`/`excludeEntities` instead — same case-insensitive
+substring matching, checked against the same raw name/ID as `entityNameOverrides` above:
+
+```json
+{
+  "platform": "SmartBedMqtt",
+  "name": "Smart Bed MQTT",
+  "mqttHost": "192.168.1.10",
+  "excludeEntities": ["snore relief"]
+}
+```
+
+That hides every control whose raw name contains "snore relief" (e.g. both a "Snore
+Relief Vibration" and a "Snore Relief Tilt" control) without touching anything else on the
+bed. Excluded controls are skipped entirely — no MQTT subscription, no HomeKit service —
+rather than just hidden client-side.
 
 ## What shows up in HomeKit
 

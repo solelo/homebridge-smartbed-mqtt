@@ -48,6 +48,7 @@ export class DiscoveryManager extends EventEmitter {
     private readonly log: Logger,
     private readonly discoveryPrefix: string,
     private readonly deviceFilter?: (deviceName: string) => boolean,
+    private readonly entityFilter?: (entityName: string) => boolean,
   ) {
     super();
   }
@@ -100,6 +101,12 @@ export class DiscoveryManager extends EventEmitter {
 
     if (this.deviceFilter && !this.deviceFilter(deviceName)) {
       this.log.debug(`Skipping entity for "${deviceName}" (excluded by device filter).`);
+      return;
+    }
+
+    const entityName = config.name || objectId;
+    if (this.entityFilter && !this.entityFilter(entityName)) {
+      this.log.debug(`Skipping entity "${entityName}" for "${deviceName}" (excluded by entity filter).`);
       return;
     }
 

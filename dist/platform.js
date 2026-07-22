@@ -5,6 +5,7 @@ const mqttManager_1 = require("./mqtt/mqttManager");
 const discoveryManager_1 = require("./discovery/discoveryManager");
 const bedAccessoryManager_1 = require("./accessories/bedAccessoryManager");
 const nameOverrides_1 = require("./accessories/nameOverrides");
+const substringFilter_1 = require("./discovery/substringFilter");
 const settings_1 = require("./settings");
 /** How long we wait after startup before pruning cached accessories nothing re-claimed. */
 const STALE_ACCESSORY_PRUNE_MS = 45_000;
@@ -42,8 +43,9 @@ class SmartBedMqttPlatform {
             keyFile: this.config.mqttKeyFile,
             allowInsecureTls: this.config.mqttAllowInsecureTls,
         }, this.log);
-        const deviceFilter = this.buildDeviceFilter();
-        this.discoveryManager = new discoveryManager_1.DiscoveryManager(this.mqttManager, this.log, this.config.discoveryPrefix?.trim() || settings_1.DEFAULT_DISCOVERY_PREFIX, deviceFilter);
+        const deviceFilter = (0, substringFilter_1.buildSubstringFilter)(this.config.includeDevices, this.config.excludeDevices);
+        const entityFilter = (0, substringFilter_1.buildSubstringFilter)(this.config.includeEntities, this.config.excludeEntities);
+        this.discoveryManager = new discoveryManager_1.DiscoveryManager(this.mqttManager, this.log, this.config.discoveryPrefix?.trim() || settings_1.DEFAULT_DISCOVERY_PREFIX, deviceFilter, entityFilter);
         new bedAccessoryManager_1.BedAccessoryManager(this.api, this.log, this.mqttManager, this.discoveryManager, this.cachedAccessories, (accessories) => {
             this.api.registerPlatformAccessories(settings_1.PLUGIN_NAME, settings_1.PLATFORM_NAME, accessories);
         }, (accessories) => {
@@ -63,23 +65,6 @@ class SmartBedMqttPlatform {
         setTimeout(() => this.pruneStaleAccessories(), STALE_ACCESSORY_PRUNE_MS);
         this.mqttManager.connect();
         this.discoveryManager.start();
-    }
-    buildDeviceFilter() {
-        const include = this.config.includeDevices?.map((s) => s.toLowerCase().trim()).filter(Boolean);
-        const exclude = this.config.excludeDevices?.map((s) => s.toLowerCase().trim()).filter(Boolean);
-        if ((!include || include.length === 0) && (!exclude || exclude.length === 0)) {
-            return undefined;
-        }
-        return (deviceName) => {
-            const name = deviceName.toLowerCase();
-            if (include && include.length > 0 && !include.some((s) => name.includes(s))) {
-                return false;
-            }
-            if (exclude && exclude.some((s) => name.includes(s))) {
-                return false;
-            }
-            return true;
-        };
     }
     pruneStaleAccessories() {
         const stale = [];

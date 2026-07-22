@@ -27,12 +27,13 @@ const LISTEN_TOPIC_KEYS = [
  *  - 'entityRemoved' (deviceKey, configTopic)    — fired when a single entity is retracted
  */
 class DiscoveryManager extends events_1.EventEmitter {
-    constructor(mqtt, log, discoveryPrefix, deviceFilter) {
+    constructor(mqtt, log, discoveryPrefix, deviceFilter, entityFilter) {
         super();
         this.mqtt = mqtt;
         this.log = log;
         this.discoveryPrefix = discoveryPrefix;
         this.deviceFilter = deviceFilter;
+        this.entityFilter = entityFilter;
         /** deviceKey -> (configTopic -> entity) */
         this.devices = new Map();
         /** configTopic -> deviceKey, so we can find/remove an entity when its config is retracted */
@@ -82,6 +83,11 @@ class DiscoveryManager extends events_1.EventEmitter {
         const deviceName = config.device?.name ?? nodeId ?? objectId;
         if (this.deviceFilter && !this.deviceFilter(deviceName)) {
             this.log.debug(`Skipping entity for "${deviceName}" (excluded by device filter).`);
+            return;
+        }
+        const entityName = config.name || objectId;
+        if (this.entityFilter && !this.entityFilter(entityName)) {
+            this.log.debug(`Skipping entity "${entityName}" for "${deviceName}" (excluded by entity filter).`);
             return;
         }
         const entity = {

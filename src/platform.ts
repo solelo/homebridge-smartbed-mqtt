@@ -3,6 +3,7 @@ import { MqttManager } from './mqtt/mqttManager';
 import { DiscoveryManager } from './discovery/discoveryManager';
 import { BedAccessoryManager } from './accessories/bedAccessoryManager';
 import { sanitizeNameOverrides } from './accessories/nameOverrides';
+import { buildSubstringFilter } from './discovery/substringFilter';
 import { DEFAULT_DISCOVERY_PREFIX, PLATFORM_NAME, PLUGIN_NAME } from './settings';
 
 export interface SmartBedPlatformConfig extends PlatformConfig {
@@ -18,6 +19,8 @@ export interface SmartBedPlatformConfig extends PlatformConfig {
   discoveryPrefix?: string;
   includeDevices?: string[];
   excludeDevices?: string[];
+  includeEntities?: string[];
+  excludeEntities?: string[];
   entityNameOverrides?: Array<{ match: string; name: string }>;
 }
 
@@ -71,13 +74,15 @@ export class SmartBedMqttPlatform implements DynamicPlatformPlugin {
       this.log,
     );
 
-    const deviceFilter = this.buildDeviceFilter();
+    const deviceFilter = buildSubstringFilter(this.config.includeDevices, this.config.excludeDevices);
+    const entityFilter = buildSubstringFilter(this.config.includeEntities, this.config.excludeEntities);
 
     this.discoveryManager = new DiscoveryManager(
       this.mqttManager,
       this.log,
       this.config.discoveryPrefix?.trim() || DEFAULT_DISCOVERY_PREFIX,
       deviceFilter,
+      entityFilter,
     );
 
     new BedAccessoryManager(
@@ -111,26 +116,6 @@ export class SmartBedMqttPlatform implements DynamicPlatformPlugin {
 
     this.mqttManager.connect();
     this.discoveryManager.start();
-  }
-
-  private buildDeviceFilter(): ((deviceName: string) => boolean) | undefined {
-    const include = this.config.includeDevices?.map((s) => s.toLowerCase().trim()).filter(Boolean);
-    const exclude = this.config.excludeDevices?.map((s) => s.toLowerCase().trim()).filter(Boolean);
-
-    if ((!include || include.length === 0) && (!exclude || exclude.length === 0)) {
-      return undefined;
-    }
-
-    return (deviceName: string) => {
-      const name = deviceName.toLowerCase();
-      if (include && include.length > 0 && !include.some((s) => name.includes(s))) {
-        return false;
-      }
-      if (exclude && exclude.some((s) => name.includes(s))) {
-        return false;
-      }
-      return true;
-    };
   }
 
   private pruneStaleAccessories(): void {

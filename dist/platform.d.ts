@@ -12,6 +12,8 @@ export interface SmartBedPlatformConfig extends PlatformConfig {
     discoveryPrefix?: string;
     includeDevices?: string[];
     excludeDevices?: string[];
+    includeEntities?: string[];
+    excludeEntities?: string[];
     entityNameOverrides?: Array<{
         match: string;
         name: string;
@@ -29,6 +31,5 @@ export declare class SmartBedMqttPlatform implements DynamicPlatformPlugin {
     /** Required by DynamicPlatformPlugin: Homebridge hands us every accessory it had cached. */
     configureAccessory(accessory: PlatformAccessory): void;
     private start;
-    private buildDeviceFilter;
     private pruneStaleAccessories;
 }

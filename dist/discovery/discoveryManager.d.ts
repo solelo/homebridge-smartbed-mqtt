@@ -27,13 +27,14 @@ export declare class DiscoveryManager extends EventEmitter {
     private readonly log;
     private readonly discoveryPrefix;
     private readonly deviceFilter?;
+    private readonly entityFilter?;
     /** deviceKey -> (configTopic -> entity) */
     private readonly devices;
     /** configTopic -> deviceKey, so we can find/remove an entity when its config is retracted */
     private readonly entityDeviceIndex;
     private readonly settleTimers;
     private readonly subscribedTopics;
-    constructor(mqtt: MqttManager, log: Logger, discoveryPrefix: string, deviceFilter?: ((deviceName: string) => boolean) | undefined);
+    constructor(mqtt: MqttManager, log: Logger, discoveryPrefix: string, deviceFilter?: ((deviceName: string) => boolean) | undefined, entityFilter?: ((entityName: string) => boolean) | undefined);
     start(): void;
     private handleMessage;
     private handleDiscoveryMessage;

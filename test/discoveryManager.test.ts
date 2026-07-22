@@ -2,10 +2,10 @@ import { DiscoveryManager } from '../src/discovery/discoveryManager';
 import { FakeMqttManager } from './mocks/mqttManager';
 import { makeFakeLogger } from './mocks/hap';
 
-function setup(deviceFilter?: (name: string) => boolean) {
+function setup(deviceFilter?: (name: string) => boolean, entityFilter?: (name: string) => boolean) {
   const mqtt = new FakeMqttManager();
   const log = makeFakeLogger();
-  const manager = new DiscoveryManager(mqtt as any, log as any, 'homeassistant', deviceFilter);
+  const manager = new DiscoveryManager(mqtt as any, log as any, 'homeassistant', deviceFilter, entityFilter);
   manager.start();
   return { mqtt, log, manager };
 }
@@ -141,6 +141,37 @@ describe('DiscoveryManager', () => {
     mqtt.emitMessage(
       'homeassistant/switch/bed1/x/config',
       JSON.stringify({ device: { identifiers: 'bed1', name: 'Guest Room Bed' } }),
+    );
+    jest.advanceTimersByTime(1500);
+    expect(onSettled).not.toHaveBeenCalled();
+  });
+
+  it('applies the entity filter, excluding one control while keeping the rest of the device', () => {
+    const { mqtt, manager } = setup(undefined, (name) => !name.toLowerCase().includes('snore relief'));
+    const onSettled = jest.fn();
+    manager.on('deviceSettled', onSettled);
+    mqtt.emitMessage(
+      'homeassistant/switch/bed1/snore/config',
+      JSON.stringify({ name: 'Snore Relief Vibration', device: { identifiers: 'bed1' } }),
+    );
+    mqtt.emitMessage(
+      'homeassistant/cover/bed1/head/config',
+      JSON.stringify({ name: 'Head Motor', device: { identifiers: 'bed1' } }),
+    );
+    jest.advanceTimersByTime(1500);
+    expect(onSettled).toHaveBeenCalledTimes(1);
+    const entities = onSettled.mock.calls[0][0].entities;
+    expect(entities).toHaveLength(1);
+    expect(entities[0].config.name).toBe('Head Motor');
+  });
+
+  it('falls back to matching the entity filter against objectId when no name is published', () => {
+    const { mqtt, manager } = setup(undefined, (name) => !name.toLowerCase().includes('snoretilt'));
+    const onSettled = jest.fn();
+    manager.on('deviceSettled', onSettled);
+    mqtt.emitMessage(
+      'homeassistant/switch/bed1/snoretilt/config',
+      JSON.stringify({ device: { identifiers: 'bed1' } }),
     );
     jest.advanceTimersByTime(1500);
     expect(onSettled).not.toHaveBeenCalled();

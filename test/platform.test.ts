@@ -104,6 +104,33 @@ describe('SmartBedMqttPlatform', () => {
     jest.useRealTimers();
   });
 
+  it('excludeEntities hides a matching control while keeping the rest of the bed', () => {
+    jest.useFakeTimers();
+    const { api } = setup({
+      platform: 'SmartBedMqtt',
+      name: 'test',
+      mqttHost: 'broker.local',
+      excludeEntities: ['snore relief'],
+    });
+    api.emit('didFinishLaunching');
+    lastClient.emit(
+      'message',
+      'homeassistant/switch/bed1/snore/config',
+      Buffer.from(JSON.stringify({ name: 'Snore Relief Vibration', device: { identifiers: 'bed1', name: 'My Bed' } })),
+    );
+    lastClient.emit(
+      'message',
+      'homeassistant/cover/bed1/head/config',
+      Buffer.from(JSON.stringify({ name: 'Head Motor', device: { identifiers: 'bed1', name: 'My Bed' } })),
+    );
+    jest.advanceTimersByTime(DISCOVERY_SETTLE_MS);
+    expect(api.registerPlatformAccessories).toHaveBeenCalledTimes(1);
+    const accessory = api.registerPlatformAccessories.mock.calls[0][2][0];
+    expect(accessory.services.some((s: any) => s.displayName === 'Snore Relief Vibration')).toBe(false);
+    expect(accessory.services.some((s: any) => s.displayName === 'Head Motor')).toBe(true);
+    jest.useRealTimers();
+  });
+
   it('prunes a cached accessory that is never re-claimed within the grace period', () => {
     jest.useFakeTimers();
     const { api, platform } = setup({ platform: 'SmartBedMqtt', name: 'test', mqttHost: 'broker.local' });

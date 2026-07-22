@@ -84,6 +84,18 @@
         "items": { "type": "string" },
         "description": "Case-insensitive substrings of bed names to hide from HomeKit."
       },
+      "includeEntities": {
+        "title": "Only Include Controls Matching (optional)",
+        "type": "array",
+        "items": { "type": "string" },
+        "description": "Case-insensitive substrings of control names to include. Leave empty to include every control smartbed-mqtt publishes for a bed. Applies per-control, unlike Include/Exclude Beds above which hide an entire bed."
+      },
+      "excludeEntities": {
+        "title": "Exclude Controls Matching (optional)",
+        "type": "array",
+        "items": { "type": "string" },
+        "description": "Case-insensitive substrings of control names to hide from HomeKit — e.g. \"snore relief\" to hide every snore-relief control while keeping the rest of the bed. Matched against each control's raw name/ID, same as Rename Controls below."
+      },
       "entityNameOverrides": {
         "title": "Rename Controls (optional)",
         "type": "array",
@@ -119,8 +131,8 @@
     },
     {
       "type": "fieldset",
-      "title": "Naming",
-      "items": ["entityNameOverrides"]
+      "title": "Controls",
+      "items": ["includeEntities", "excludeEntities", "entityNameOverrides"]
     }
   ]
 }
