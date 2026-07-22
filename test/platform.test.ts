@@ -16,8 +16,8 @@ jest.mock('mqtt', () => ({ connect: () => connectMock() }));
 import { SmartBedMqttPlatform, SmartBedPlatformConfig } from '../src/platform';
 import { makeFakeApi, makeFakeLogger, Service } from './mocks/hap';
 
-// Mirrors platform.ts's private STALE_ACCESSORY_PRUNE_MS constant.
-const STALE_ACCESSORY_PRUNE_MS = 45_000;
+// Matches platform.ts's default accessoryPruneMinutes (5) when not overridden by config.
+const DEFAULT_PRUNE_MS = 5 * 60_000;
 const DISCOVERY_SETTLE_MS = 1500;
 
 function setup(config: SmartBedPlatformConfig) {
@@ -168,13 +168,18 @@ describe('SmartBedMqttPlatform', () => {
 
   it('prunes a cached accessory that is never re-claimed within the grace period', () => {
     jest.useFakeTimers();
-    const { api, platform } = setup({ platform: 'SmartBedMqtt', name: 'test', mqttHost: 'broker.local' });
+    const { api, platform } = setup({
+      platform: 'SmartBedMqtt',
+      name: 'test',
+      mqttHost: 'broker.local',
+      accessoryPruneMinutes: 1,
+    });
     const staleUuid = api.hap.uuid.generate('smartbed-mqtt:long-gone-bed');
     const staleAccessory = new api.platformAccessory('Long Gone Bed', staleUuid);
     platform.configureAccessory(staleAccessory as any);
 
     api.emit('didFinishLaunching');
-    jest.advanceTimersByTime(STALE_ACCESSORY_PRUNE_MS + 1);
+    jest.advanceTimersByTime(60_000 + 1);
 
     expect(api.unregisterPlatformAccessories).toHaveBeenCalledWith(
       'homebridge-smartbed-mqtt',
@@ -186,7 +191,12 @@ describe('SmartBedMqttPlatform', () => {
 
   it('does not prune a cached accessory whose device re-settles before the grace period ends', () => {
     jest.useFakeTimers();
-    const { api, platform } = setup({ platform: 'SmartBedMqtt', name: 'test', mqttHost: 'broker.local' });
+    const { api, platform } = setup({
+      platform: 'SmartBedMqtt',
+      name: 'test',
+      mqttHost: 'broker.local',
+      accessoryPruneMinutes: 1,
+    });
     const uuid = api.hap.uuid.generate('smartbed-mqtt:bed1');
     const cached = new api.platformAccessory('My Bed', uuid);
     platform.configureAccessory(cached as any);
@@ -198,9 +208,30 @@ describe('SmartBedMqttPlatform', () => {
       Buffer.from(JSON.stringify({ device: { identifiers: 'bed1', name: 'My Bed' } })),
     );
     jest.advanceTimersByTime(DISCOVERY_SETTLE_MS);
-    jest.advanceTimersByTime(STALE_ACCESSORY_PRUNE_MS + 1);
+    jest.advanceTimersByTime(60_000 + 1);
 
     expect(api.unregisterPlatformAccessories).not.toHaveBeenCalled();
+    jest.useRealTimers();
+  });
+
+  it('defaults the grace period to 5 minutes when accessoryPruneMinutes is not configured (regression: 45s was too short for BLE beds that can take minutes to reconnect)', () => {
+    jest.useFakeTimers();
+    const { api, platform } = setup({ platform: 'SmartBedMqtt', name: 'test', mqttHost: 'broker.local' });
+    const staleUuid = api.hap.uuid.generate('smartbed-mqtt:slow-reconnect-bed');
+    const staleAccessory = new api.platformAccessory('Slow Reconnect Bed', staleUuid);
+    platform.configureAccessory(staleAccessory as any);
+
+    api.emit('didFinishLaunching');
+
+    jest.advanceTimersByTime(45_000);
+    expect(api.unregisterPlatformAccessories).not.toHaveBeenCalled();
+
+    jest.advanceTimersByTime(DEFAULT_PRUNE_MS - 45_000 + 1);
+    expect(api.unregisterPlatformAccessories).toHaveBeenCalledWith(
+      'homebridge-smartbed-mqtt',
+      'SmartBedMqtt',
+      [staleAccessory],
+    );
     jest.useRealTimers();
   });
 

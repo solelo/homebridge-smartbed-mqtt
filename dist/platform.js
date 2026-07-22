@@ -7,8 +7,16 @@ const bedAccessoryManager_1 = require("./accessories/bedAccessoryManager");
 const nameOverrides_1 = require("./accessories/nameOverrides");
 const substringFilter_1 = require("./discovery/substringFilter");
 const settings_1 = require("./settings");
-/** How long we wait after startup before pruning cached accessories nothing re-claimed. */
-const STALE_ACCESSORY_PRUNE_MS = 45_000;
+/**
+ * Default minutes to wait after startup before pruning cached accessories nothing has
+ * re-claimed. BLE-connected beds in particular can take well over a minute to reconnect
+ * and get rediscovered after a restart — too short a window here causes a still-valid bed
+ * to be permanently unregistered from HomeKit just because it hadn't reconnected yet,
+ * requiring smartbed-mqtt itself to restart before it can reappear (toggling the bed
+ * elsewhere only sends a state update, not a fresh discovery message, so it won't recover
+ * on its own once pruned).
+ */
+const DEFAULT_ACCESSORY_PRUNE_MINUTES = 5;
 class SmartBedMqttPlatform {
     constructor(log, config, api) {
         this.log = log;
@@ -62,7 +70,8 @@ class SmartBedMqttPlatform {
         // which re-uses cached accessories rather than creating new ones). Anything still
         // unclaimed after a grace period belongs to a bed that's no longer being published by
         // smartbed-mqtt (renamed, removed, add-on reconfigured) and should be removed.
-        setTimeout(() => this.pruneStaleAccessories(), STALE_ACCESSORY_PRUNE_MS);
+        const pruneMinutes = this.config.accessoryPruneMinutes ?? DEFAULT_ACCESSORY_PRUNE_MINUTES;
+        setTimeout(() => this.pruneStaleAccessories(), pruneMinutes * 60_000);
         this.mqttManager.connect();
         this.discoveryManager.start();
     }

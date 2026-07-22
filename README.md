@@ -80,6 +80,7 @@ Manual `config.json` example:
 | `includeEntities` / `excludeEntities` | No | Arrays of case-insensitive substrings to filter which *individual controls* are exposed (unlike `includeDevices`/`excludeDevices`, which hide a whole bed). |
 | `entityNameOverrides` | No | Array of `{ "match": "...", "name": "..." }` rules to rename controls (see below). |
 | `hideTemperatureSensor` / `hideHumiditySensor` / `hideCo2Sensor` | No | Booleans — hide that specific native sensor type without touching anything else on the bed. |
+| `accessoryPruneMinutes` | No | Defaults to `5`. How long to wait after startup before removing a bed that hasn't reconnected yet — increase this if your bed uses Bluetooth and is slow to reconnect after a restart (see below). |
 
 Restart Homebridge after saving. Beds typically appear in HomeKit within a few seconds,
 once smartbed-mqtt (re)publishes its retained discovery messages.
@@ -238,9 +239,16 @@ in **Automations** — e.g. "When I arrive home, set Head to 30% and turn on Zer
 - **Nothing shows up**: confirm smartbed-mqtt itself is connected to the *same* broker,
   and that its own Home Assistant integration (if you have HA) already sees the bed —
   this plugin only ever reflects what smartbed-mqtt is already publishing.
-- **A bed disappeared after Homebridge restarted**: it's removed automatically ~45
-  seconds after startup if smartbed-mqtt hasn't re-announced it (e.g. add-on stopped,
-  discovery prefix mismatch). Check `discoveryPrefix` matches your setup.
+- **A bed disappeared after Homebridge restarted and won't come back**: it's removed
+  automatically if smartbed-mqtt hasn't re-announced it within `accessoryPruneMinutes`
+  (default 5) of startup — normally because the add-on stopped or `discoveryPrefix`
+  doesn't match. But if your bed connects over Bluetooth, it's common for it to take a
+  couple of minutes to reconnect after a restart; if that regularly takes longer than 5
+  minutes for you, raise `accessoryPruneMinutes`. Once a bed has actually been pruned,
+  toggling it elsewhere (e.g. in Home Assistant) won't bring it back on its own — that
+  only sends a state update, not a fresh discovery message. It comes back once
+  smartbed-mqtt itself reconnects and republishes its discovery messages (usually via its
+  own restart/reconnect), or the next time you restart Homebridge after the bed is online.
 - Turn on Homebridge's debug logging (`-D`) to see every discovery/subscribe/publish the
   plugin performs.
 

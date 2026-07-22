@@ -21,6 +21,7 @@ export interface SmartBedPlatformConfig extends PlatformConfig {
     hideTemperatureSensor?: boolean;
     hideHumiditySensor?: boolean;
     hideCo2Sensor?: boolean;
+    accessoryPruneMinutes?: number;
 }
 export declare class SmartBedMqttPlatform implements DynamicPlatformPlugin {
     private readonly log;

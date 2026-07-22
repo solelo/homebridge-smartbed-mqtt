@@ -130,6 +130,14 @@
         "title": "Hide CO₂ Sensor",
         "type": "boolean",
         "default": false
+      },
+      "accessoryPruneMinutes": {
+        "title": "Stale Accessory Grace Period (minutes)",
+        "type": "integer",
+        "default": 5,
+        "minimum": 1,
+        "maximum": 60,
+        "description": "How long to wait after Homebridge starts before removing a previously-known bed that hasn't reconnected yet. Increase this if your bed uses Bluetooth and regularly takes a while to reconnect after a restart — too short a value can cause a still-valid bed to be permanently removed from HomeKit before it's had a chance to reconnect."
       }
     }
   },
@@ -142,7 +150,7 @@
     {
       "type": "fieldset",
       "title": "Discovery",
-      "items": ["discoveryPrefix", "includeDevices", "excludeDevices"]
+      "items": ["discoveryPrefix", "includeDevices", "excludeDevices", "accessoryPruneMinutes"]
     },
     {
       "type": "fieldset",
