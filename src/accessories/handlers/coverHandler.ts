@@ -56,14 +56,18 @@ export class CoverHandler extends EntityHandler {
     if (this.entity.config.set_position_topic) {
       this.publish(this.entity.config.set_position_topic, String(scaled));
     } else if (this.entity.config.command_topic) {
-      // Some covers only support OPEN/CLOSE/STOP rather than absolute positioning.
-      if (homekitPos >= 90 && this.entity.config.payload_open) {
+      // Some covers only support OPEN/CLOSE/STOP rather than absolute positioning. Treat the
+      // slider as a simple open/close toggle around the midpoint — every drag results in a
+      // real motor command this way, rather than a dead zone (previously >10% and <90%) that
+      // silently did nothing and left the HomeKit slider stuck at whatever the user picked.
+      if (homekitPos >= 50 && this.entity.config.payload_open) {
         this.publish(this.entity.config.command_topic, this.entity.config.payload_open);
-      } else if (homekitPos <= 10 && this.entity.config.payload_close) {
+      } else if (homekitPos < 50 && this.entity.config.payload_close) {
         this.publish(this.entity.config.command_topic, this.entity.config.payload_close);
       } else {
         this.ctx.log.warn(
-          `[${this.entity.deviceName}] "${this.entity.objectId}" only supports open/close, not an absolute position.`,
+          `[${this.entity.deviceName}] "${this.entity.objectId}" only supports open/close, but no ` +
+            `${homekitPos >= 50 ? 'payload_open' : 'payload_close'} was published for it.`,
         );
       }
     }

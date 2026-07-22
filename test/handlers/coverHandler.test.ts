@@ -66,7 +66,7 @@ describe('CoverHandler', () => {
     expect(ctx.mqtt.published.at(-1)).toEqual({ topic: 'bed1/head/cmd', payload: 'CLOSE', retain: false });
   });
 
-  it('warns rather than publishing anything for a mid-range target with only open/close support', async () => {
+  it('treats every position as open/close around the 50% midpoint, so no drag is ever a no-op', async () => {
     const ctx = makeContext();
     const entity = makeEntity('cover', 'head', {
       command_topic: 'bed1/head/cmd',
@@ -75,7 +75,24 @@ describe('CoverHandler', () => {
     });
     const handler = new CoverHandler(entity, ctx);
     const service = asFake(handler.setupService());
+
     await service.getCharacteristic(Characteristic.TargetPosition).triggerSet(50);
+    expect(ctx.mqtt.published.at(-1)).toEqual({ topic: 'bed1/head/cmd', payload: 'OPEN', retain: false });
+
+    await service.getCharacteristic(Characteristic.TargetPosition).triggerSet(49);
+    expect(ctx.mqtt.published.at(-1)).toEqual({ topic: 'bed1/head/cmd', payload: 'CLOSE', retain: false });
+  });
+
+  it('warns without publishing when the direction requested has no payload configured at all', async () => {
+    const ctx = makeContext();
+    const entity = makeEntity('cover', 'head', {
+      command_topic: 'bed1/head/cmd',
+      payload_open: 'OPEN',
+      // payload_close intentionally omitted
+    });
+    const handler = new CoverHandler(entity, ctx);
+    const service = asFake(handler.setupService());
+    await service.getCharacteristic(Characteristic.TargetPosition).triggerSet(20);
     expect(ctx.mqtt.published).toHaveLength(0);
     expect(ctx.log.warn).toHaveBeenCalled();
   });

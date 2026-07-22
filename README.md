@@ -195,12 +195,23 @@ in **Automations** — e.g. "When I arrive home, set Head to 30% and turn on Zer
   silently dropped or mis-mapped.
 - **`value_template` support**: the plugin understands the common
   `{{ value }}` / `{{ value_json.foo.bar }}` / `{{ value_json.foo | int }}` /
-  `{{ value_json.foo | round(1) }}` forms. If smartbed-mqtt publishes something more
-  exotic for a particular entity, that entity is skipped with a log message rather than
-  mis-rendered — please open an issue with the log line if you hit this.
+  `{{ value_json.foo | round(1) }}` / `{{ value_json.foo | default('') }}` forms. If
+  smartbed-mqtt publishes something more exotic for a particular entity, that entity is
+  skipped with a log message rather than mis-rendered — please open an issue with the log
+  line if you hit this.
 - **Multiple-choice massage patterns** are exposed as one momentary switch per option
   rather than a single native picker, since HomeKit has no first-class multi-choice
   control in the stock Home app.
+- **Open/close-only motors**: some bed integrations (e.g. Sleeptracker) only publish
+  `payload_open`/`payload_close` for a motor, with no absolute-position topic. For those,
+  dragging the HomeKit slider is treated as a simple toggle around the 50% midpoint — the
+  motor only ever fully opens or fully closes, it can't stop partway.
+- **This plugin isn't the only thing that can be publishing Home Assistant MQTT discovery
+  messages on your broker.** It subscribes to every `<prefix>/+/+/config` message, not
+  only smartbed-mqtt's — so if you run other HA-discovery-based tools on the same broker
+  (e.g. [ESPresense](https://espresense.com)), their devices will show up in HomeKit too,
+  with whatever internal/technical names they publish. Use `excludeDevices` to filter them
+  out, e.g. `"excludeDevices": ["espresense"]`.
 
 ## Troubleshooting
 

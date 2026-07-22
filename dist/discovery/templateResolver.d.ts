@@ -9,6 +9,7 @@
  *   {{ value_json.foo | int }}
  *   {{ value_json.foo | float }}
  *   {{ value_json.foo | round(1) }}
+ *   {{ value_json.foo | default('') }}   (substituted only when the path resolves to nothing)
  *   {{ 1 if value_json.foo else 0 }}   (only the boolean-coercion ternary form)
  *
  * We intentionally do NOT implement a general Jinja2 engine and never `eval`/`new
@@ -26,6 +27,8 @@ interface ParsedTemplate {
     roundDigits?: number;
     /** True if this is the `{{ 1 if X else 0 }}` boolean-coercion pattern. */
     booleanCoerce?: boolean;
+    /** Substituted in when the path resolves to `undefined` (the `| default(...)` filter). */
+    defaultValue?: TemplateValue;
 }
 /**
  * Attempt to parse a value_template string into our tiny grammar. Returns `undefined`

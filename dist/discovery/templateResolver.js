@@ -10,6 +10,7 @@
  *   {{ value_json.foo | int }}
  *   {{ value_json.foo | float }}
  *   {{ value_json.foo | round(1) }}
+ *   {{ value_json.foo | default('') }}   (substituted only when the path resolves to nothing)
  *   {{ 1 if value_json.foo else 0 }}   (only the boolean-coercion ternary form)
  *
  * We intentionally do NOT implement a general Jinja2 engine and never `eval`/`new
@@ -24,6 +25,7 @@ exports.resolveTemplate = resolveTemplate;
 const SIMPLE_VALUE_JSON = /^\{\{\s*value_json((?:\.[a-zA-Z_][a-zA-Z0-9_]*|\[['"][^'"]+['"]\])*)\s*(\|\s*(int|float|round)(\((\d+)\))?\s*)?\}\}$/;
 const SIMPLE_VALUE = /^\{\{\s*value\s*\}\}$/;
 const BOOLEAN_COERCE = /^\{\{\s*1\s+if\s+value_json((?:\.[a-zA-Z_][a-zA-Z0-9_]*|\[['"][^'"]+['"]\])*)\s+else\s+0\s*\}\}$/;
+const VALUE_JSON_DEFAULT = /^\{\{\s*value_json((?:\.[a-zA-Z_][a-zA-Z0-9_]*|\[['"][^'"]+['"]\])*)\s*\|\s*default\(\s*(?:'([^']*)'|"([^"]*)"|(-?\d+(?:\.\d+)?))\s*\)\s*\}\}$/;
 function splitPath(rawPath) {
     if (!rawPath) {
         return [];
@@ -52,6 +54,12 @@ function parseTemplate(template) {
     if (boolMatch) {
         return { path: splitPath(boolMatch[1]), booleanCoerce: true };
     }
+    const defaultMatch = VALUE_JSON_DEFAULT.exec(trimmed);
+    if (defaultMatch) {
+        const path = splitPath(defaultMatch[1]);
+        const defaultValue = defaultMatch[4] !== undefined ? Number(defaultMatch[4]) : (defaultMatch[2] ?? defaultMatch[3] ?? '');
+        return { path, defaultValue };
+    }
     const match = SIMPLE_VALUE_JSON.exec(trimmed);
     if (match) {
         const path = splitPath(match[1]);
@@ -77,7 +85,7 @@ function getPath(obj, path) {
  * `value_json.*` access. Never throws — returns `undefined` on any failure.
  */
 function resolveTemplate(parsed, rawPayload) {
-    if (parsed.path.length === 0 && !parsed.filter && !parsed.booleanCoerce) {
+    if (parsed.path.length === 0 && !parsed.filter && !parsed.booleanCoerce && parsed.defaultValue === undefined) {
         return rawPayload;
     }
     let json;
@@ -92,7 +100,7 @@ function resolveTemplate(parsed, rawPayload) {
         return isTruthy(value) ? 1 : 0;
     }
     if (value === undefined) {
-        return undefined;
+        return parsed.defaultValue !== undefined ? parsed.defaultValue : undefined;
     }
     switch (parsed.filter) {
         case 'int': {
